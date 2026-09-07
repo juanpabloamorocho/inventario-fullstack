@@ -6,12 +6,11 @@ from dotenv import load_dotenv
 import mysql.connector
 
 
-app = FastAPI(title="API Gestor de Inventario")
+app = FastAPI()
 
-# Habilitar CORS para cualquier origen (incluyendo Live Server y file://)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Permite peticiones desde Vercel o cualquier dominio
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

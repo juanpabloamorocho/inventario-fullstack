@@ -24,7 +24,8 @@ def get_db_connection():
             host=os.getenv("DB_HOST"),          # Tu host de MySQL
             user=os.getenv("DB_USER"),          # Tu usuario de MySQL
             password=os.getenv("DB_PASSWORD"),          # Pon tu contraseña si configuraste una
-            database=os.getenv("DB_NAME")
+            database=os.getenv("DB_NAME"),
+            port= int(os.getenv("DB_PORT"))
         )
     except Exception as e:
         print(f"❌ Error conectando a MySQL: {e}")

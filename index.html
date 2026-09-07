@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Inventario - Full Stack</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; }
+        form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; background: #eef2f5; padding: 15px; border-radius: 8px; }
+        form input, form button { padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 5px; }
+        form .full-width { grid-column: span 2; }
+        form button { background-color: #27ae60; color: white; border: none; font-weight: bold; cursor: pointer; }
+        form button:hover { background-color: #219150; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #34495e; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+        .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📦 Gestor de Inventario</h1>
+
+    <form id="productForm">
+        <input type="text" id="nombre" placeholder="Nombre del producto" required>
+        <input type="text" id="categoria" placeholder="Categoría" required>
+        <input type="number" id="precio" step="0.01" placeholder="Precio ($)" required>
+        <input type="number" id="stock" placeholder="Cantidad en stock" required>
+        <input type="text" id="descripcion" class="full-width" placeholder="Descripción breve" required>
+        <button type="submit" class="full-width">➕ Agregar Producto</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody id="tablaProductos"></tbody>
+    </table>
+</div>
+
+<script>
+    const API_URL = "http://127.0.0.1:8000/api/productos";
+
+    async function cargarProductos() {
+    try {
+        const respuesta = await fetch(API_URL);
+        if (!respuesta.ok) throw new Error("Error en la respuesta del servidor");
+        const productos = await respuesta.json();
+        
+        // Imprime en consola la lista para verificar cómo vienen las llaves del JSON
+        console.log("Productos recibidos:", productos);
+
+        const tabla = document.getElementById("tablaProductos");
+        tabla.innerHTML = "";
+
+        productos.forEach(p => {
+            // Asegurarnos de obtener el id correcto independientemente del nombre del campo en la BD
+            const idProducto = p.id || p.id_producto || p.idproductos;
+
+            tabla.innerHTML += `
+                <tr>
+                    <td>${idProducto}</td>
+                    <td><strong>${p.nombre}</strong><br><small>${p.descripcion}</small></td>
+                    <td>${p.categoria}</td>
+                    <td>$${parseFloat(p.precio).toFixed(2)}</td>
+                    <td>${p.stock}</td>
+                    <td>
+                        <button class="btn-delete" onclick="eliminarProducto(${idProducto})">🗑️ Eliminar</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (error) {
+        console.error("Error al cargar productos:", error);
+    }
+}
+
+    document.getElementById("productForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const nuevoProducto = {
+            nombre: document.getElementById("nombre").value,
+            categoria: document.getElementById("categoria").value,
+            precio: parseFloat(document.getElementById("precio").value),
+            stock: parseInt(document.getElementById("stock").value),
+            descripcion: document.getElementById("descripcion").value
+        };
+
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(nuevoProducto)
+            });
+
+            if (res.ok) {
+                document.getElementById("productForm").reset();
+                cargarProductos();
+            } else {
+                alert("Error al guardar en el servidor.");
+            }
+        } catch (err) {
+            console.error("Error al enviar producto:", err);
+        }
+    });
+
+    async function eliminarProducto(id) {
+    if (confirm(`¿Estás seguro de que deseas eliminar el producto con ID ${id}?`)) {
+        try {
+            const respuesta = await fetch(`${API_URL}/${id}`, {
+                method: "DELETE"
+            });
+
+            if (respuesta.ok) {
+                alert("Producto eliminado correctamente");
+                cargarProductos(); // Recarga la tabla en pantalla
+            } else {
+                const errorData = await respuesta.json();
+                console.error("Error del servidor:", errorData);
+                alert(`No se pudo eliminar: ${errorData.detail || "Error desconocido"}`);
+            }
+        } catch (error) {
+            console.error("Error en la petición:", error);
+            alert("Error de conexión al intentar eliminar.");
+        }
+    }
+}
+
+    cargarProductos();
+</script>
+
+</body>
+</html>

@@ -69,7 +69,7 @@ def eliminar_producto(producto_id: int):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM productos WHERE id_productos = %s", (producto_id,))
+        cursor.execute("DELETE FROM productos WHERE id_producto = %s", (producto_id,))
         conn.commit()
         
         filas_afectadas = cursor.rowcount
